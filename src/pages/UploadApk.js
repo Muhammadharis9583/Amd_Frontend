@@ -6,6 +6,7 @@ import axiosInstance from "../utils/axiosInstance";
 function UploadApk() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [progress, setProgress] = useState();
+  const [isValid , setValid] = useState(false)
    const [error, setError] = useState();
 
    const submitHandler = e => {
@@ -20,22 +21,27 @@ function UploadApk() {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        onUploadProgress: data => {
+        onUploadProgress: (data) => {
           //Set the progress value to show the progress bar
-          setProgress(Math.round((100 * data.loaded) / data.total))
+          setProgress(Math.round((100 * data.loaded) / data.total));
         },
       })
-      .catch(error => {
-        const { code } = error?.response?.data
+      .catch((error) => {
+        const { code } = error?.response?.data;
         switch (code) {
           case "FILE_MISSING":
-            setError("Please select a file before uploading!")
-            break
+            setError("Please select a file before uploading!");
+            break;
+          case "INVALID_TYPE":
+            setError(
+              "This file type is not supported! Only .apk files are allowed"
+            );
+            break;
           default:
-            setError("Sorry! Something went wrong. Please try again later")
-            break
+            setError("Sorry! Something went wrong. Please try again later");
+            break;
         }
-      })
+      });
   };
   return (
     <Container fluid style={{ height: "100vh" }}>
@@ -49,13 +55,25 @@ function UploadApk() {
             onSubmit={submitHandler}
           >
             <div className="mb-5 d-flex justify-content-center align-items-center w-100">
-              <img src="upload.png" height={250} width={250} />
+              <img src="upload.png" alt="upload" height={250} width={250} />
             </div>
             <Form.Group controlId="formFileLg" className="mb-5">
               <Form.Control
                 type="file"
                 size="lg"
                 onChange={(e) => {
+                  var file = e.target.files[0].name;
+                  var ex = file.split('.').pop()
+                  if (ex !== "apk"){
+                    setValid(true)
+                    setError(
+                      "This file type is not supported! Only .apk files are allowed"
+                    );
+                  }
+                  else{
+                    setError("")
+                    setValid(false)
+                  }
                   setSelectedFiles(e.target.files);
                 }}
               />
@@ -64,6 +82,7 @@ function UploadApk() {
               <Button
                 variant="outline-light"
                 type="submit"
+                disabled = {isValid}
                 size="lg"
                 className="p-3 w-50 font-weight-bolder letter-spacing-10 m-10"
               >
